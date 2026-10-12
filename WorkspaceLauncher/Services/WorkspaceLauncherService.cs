@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Text;
 using WorkspaceLauncher.Models;
 
 namespace WorkspaceLauncher.Services;
@@ -45,15 +46,15 @@ public sealed class WorkspaceLauncherService
         Action<string> report)
     {
         LaunchItem[] items = selectedItems
-            .Where(item => item.Kind == LaunchItemKind.Application)
+            .Where(item => item.Kind is LaunchItemKind.Application or LaunchItemKind.File)
             .ToArray();
         if (items.Length == 0)
         {
-            report("No application items were selected to close.");
+            report("No application or file items were selected to close.");
             return;
         }
 
-        report($"Requesting closure of selected applications for {profile.Name} on Desktop {profile.DesktopIndex + 1}...");
+        report($"Requesting closure of selected applications and files for {profile.Name} on Desktop {profile.DesktopIndex + 1}...");
         foreach (LaunchItem item in items)
         {
             string processName = GetProcessName(item);
@@ -67,7 +68,7 @@ public sealed class WorkspaceLauncherService
             {
                 ProcessStartInfo startInfo = CreateWindowProbeStartInfo(
                     processName,
-                    item.WindowTitle,
+                    GetWindowTitleFilter(item),
                     waitForWindow: false);
                 startInfo.ArgumentList.Add("-DesktopIndex");
                 startInfo.ArgumentList.Add(profile.DesktopIndex.ToString());
@@ -144,14 +145,16 @@ public sealed class WorkspaceLauncherService
                 continue;
             }
 
-            if (LooksLikeFilePath(item.Target) && !File.Exists(item.Target))
+            bool isFile = item.Kind == LaunchItemKind.File;
+            if ((isFile || LooksLikeFilePath(item.Target)) && !File.Exists(item.Target))
             {
                 report($"ERROR: {item.Name} was not found: {item.Target}");
                 continue;
             }
 
             string processName = GetProcessName(item);
-            if (processName.Length > 0 &&
+            string windowTitle = GetWindowTitleFilter(item);
+            if (!isFile && processName.Length > 0 &&
                 await HasVisibleWindowAsync(processName, item.WindowTitle, item.Name))
             {
                 report($"{item.Name} already has a visible window; skipped.");
@@ -164,13 +167,13 @@ public sealed class WorkspaceLauncherService
             {
                 rootProcessId = launchedProcess?.Id ?? 0;
             }
-            report($"Launched {item.Name}.");
+            report(isFile ? $"Opened file: {item.Name}." : $"Launched {item.Name}.");
 
             if (processName.Length > 0)
             {
                 await WaitForWindowAsync(
                     processName,
-                    item.WindowTitle,
+                    windowTitle,
                     item.Name,
                     targetDesktopId,
                     profile.DesktopIndex,
@@ -179,7 +182,9 @@ public sealed class WorkspaceLauncherService
             }
             else
             {
-                report($"WARNING: {item.Name} was launched, but its window cannot be tracked. Configure a process name to place late-opening windows on the assigned desktop.");
+                report(isFile
+                    ? $"WARNING: {item.Name} was opened with its default app, but Workspace Manager could not determine the app process to place its window on Desktop {profile.DesktopIndex + 1}. Set Process name in the item settings to enable tracking."
+                    : $"WARNING: {item.Name} was launched, but its window cannot be tracked. Configure a process name to place late-opening windows on the assigned desktop.");
             }
         }
     }
@@ -354,6 +359,11 @@ public sealed class WorkspaceLauncherService
             return Path.GetFileNameWithoutExtension(item.ProcessName.Trim());
         }
 
+        if (item.Kind == LaunchItemKind.File)
+        {
+            return TryGetAssociatedProcessName(item.Target);
+        }
+
         string extension = Path.GetExtension(item.Target);
         if (extension.Equals(".exe", StringComparison.OrdinalIgnoreCase))
         {
@@ -368,7 +378,54 @@ public sealed class WorkspaceLauncherService
         return TryGetShortcutProcessName(item.Target);
     }
 
+    private static string GetWindowTitleFilter(LaunchItem item)
+    {
+        if (!string.IsNullOrWhiteSpace(item.WindowTitle))
+        {
+            return item.WindowTitle.Trim();
+        }
+
+        return item.Kind == LaunchItemKind.File
+            ? Path.GetFileNameWithoutExtension(item.Target)
+            : "";
+    }
+
     private static string GetWindowWord(int count) => count == 1 ? "window" : "windows";
+
+    private static string TryGetAssociatedProcessName(string filePath)
+    {
+        string extension = Path.GetExtension(filePath);
+        if (string.IsNullOrWhiteSpace(extension))
+        {
+            return "";
+        }
+
+        uint bufferLength = 0;
+        int result = AssocQueryString(0, 2, extension, null, null, ref bufferLength);
+        if (bufferLength == 0 || bufferLength > 32768)
+        {
+            return "";
+        }
+
+        var executablePath = new StringBuilder((int)bufferLength);
+        result = AssocQueryString(0, 2, extension, null, executablePath, ref bufferLength);
+        if (result < 0)
+        {
+            return "";
+        }
+
+        string path = executablePath.ToString().Trim().Trim('"');
+        return string.IsNullOrWhiteSpace(path) ? "" : Path.GetFileNameWithoutExtension(path);
+    }
+
+    [DllImport("Shlwapi.dll", CharSet = CharSet.Unicode, PreserveSig = true)]
+    private static extern int AssocQueryString(
+        uint flags,
+        uint associationString,
+        string association,
+        string? extra,
+        StringBuilder? output,
+        ref uint outputLength);
 
     private static string TryGetShortcutProcessName(string shortcutPath)
     {

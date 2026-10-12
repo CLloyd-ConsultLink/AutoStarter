@@ -5,8 +5,9 @@ namespace WorkspaceLauncher.Models;
 
 public enum LaunchItemKind
 {
-    Application,
-    Website
+    Application = 0,
+    Website = 1,
+    File = 2
 }
 
 public sealed class LaunchItem : INotifyPropertyChanged

@@ -189,21 +189,21 @@
                                    Foreground="{StaticResource MutedBrush}" VerticalAlignment="Center"
                                    Margin="0,0,14,0" />
                         <Button Grid.Column="1" Content="+ Add launch item"
-                                ToolTip="Choose whether to add an application or website, then enter its launch details."
+                                ToolTip="Choose whether to add an application, website, or file, then enter its details."
                                 Padding="11,7"
                                 Click="AddLaunchItemButton_Click" />
-                        <TextBlock Grid.Column="2" Text="Add apps and websites to this workspace"
+                        <TextBlock Grid.Column="2" Text="Add applications, websites, and files to this workspace"
                                    Margin="12,0" FontSize="11"
                                    Foreground="{StaticResource MutedBrush}"
                                    VerticalAlignment="Center" />
                         <Button Grid.Column="3" Content="Remove"
-                                ToolTip="Remove the selected app or website from this workspace."
+                                ToolTip="Remove the selected application, website, or file from this workspace."
                                 Padding="11,7" Margin="8,0,0,0"
                                 Click="RemoveItemButton_Click" />
                     </Grid>
 
                     <DataGrid x:Name="LaunchItemsGrid" Grid.Row="2" ItemsSource="{Binding Items}"
-                              ToolTip="These apps and websites open in the order shown. Double-click a row to edit it."
+                              ToolTip="These applications, websites, and files open in the order shown. Double-click a row to edit it."
                               AutoGenerateColumns="False" IsReadOnly="True"
                               CanUserAddRows="False" CanUserDeleteRows="False"
                               CanUserReorderColumns="False" CanUserSortColumns="False"
@@ -226,17 +226,17 @@
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="TYPE" Binding="{Binding Kind}" IsReadOnly="True" Width="105" />
                             <DataGridTextColumn Header="NAME" Binding="{Binding Name, UpdateSourceTrigger=PropertyChanged}" Width="160" />
-                            <DataGridTextColumn Header="APP PATH OR WEBSITE" Binding="{Binding Target, UpdateSourceTrigger=PropertyChanged}" Width="*" />
+                            <DataGridTextColumn Header="APPLICATION, FILE, OR WEBSITE" Binding="{Binding Target, UpdateSourceTrigger=PropertyChanged}" Width="*" />
                             <DataGridTextColumn Binding="{Binding ProcessName, UpdateSourceTrigger=PropertyChanged}" Width="180">
                                 <DataGridTextColumn.Header>
                                     <TextBlock Text="PROCESS NAME (OPTIONAL)"
-                                               ToolTip="Usually inferred from the app file. For launchers that start the real app as a child process, enter that app's process name (for example, javaw)." />
+                                               ToolTip="Usually inferred from an app executable or a file association. Enter the process name manually if needed." />
                                 </DataGridTextColumn.Header>
                             </DataGridTextColumn>
                             <DataGridTextColumn Binding="{Binding WindowTitle, UpdateSourceTrigger=PropertyChanged}" Width="210">
                                 <DataGridTextColumn.Header>
                                     <TextBlock Text="WINDOW TITLE CONTAINS (OPTIONAL)"
-                                               ToolTip="Enter text found in the final application window but not in its splash screen. This helps the launcher wait for the real window before moving on." />
+                                               ToolTip="Enter text in the target app or document window to help Workspace Manager find the correct window." />
                                 </DataGridTextColumn.Header>
                             </DataGridTextColumn>
                         </DataGrid.Columns>
@@ -248,7 +248,7 @@
                         <StackPanel VerticalAlignment="Center">
                             <TextBlock Text="This workspace is empty" FontSize="16" FontWeight="SemiBold"
                                        Foreground="{StaticResource InkBrush}" />
-                            <TextBlock Text="Choose + Add launch item to add an app, shortcut, or website. Use Move up and Move down to set the launch order, then save your changes."
+                            <TextBlock Text="Choose + Add launch item to add an application, shortcut, website, or file. Use Move up and Move down to set the launch order, then save your changes."
                                        TextWrapping="Wrap" FontSize="12" LineHeight="19"
                                        Foreground="{StaticResource MutedBrush}" Margin="0,7,0,0" />
                         </StackPanel>

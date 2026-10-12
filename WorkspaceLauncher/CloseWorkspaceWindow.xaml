@@ -13,15 +13,18 @@
         </Grid.RowDefinitions>
 
         <StackPanel Margin="0,0,0,16">
-            <TextBlock Text="Close workspace apps" FontSize="20" FontWeight="Bold"
+            <TextBlock Text="Close workspace items" FontSize="20" FontWeight="Bold"
                        Foreground="{StaticResource InkBrush}" />
             <TextBlock x:Name="WorkspaceDescription" FontSize="12"
                        Foreground="{StaticResource MutedBrush}" Margin="0,4,0,0" />
         </StackPanel>
 
-        <TextBlock Grid.Row="1" Text="Choose which configured applications to close. All are selected by default. Websites are not included."
-                   TextWrapping="Wrap" FontSize="12" Foreground="{StaticResource InkBrush}"
-                   Margin="0,0,0,10" />
+        <StackPanel Grid.Row="1" Margin="0,0,0,10">
+            <TextBlock Text="Choose which configured applications and files to close. All are selected by default. Websites are not included."
+                       TextWrapping="Wrap" FontSize="12" Foreground="{StaticResource InkBrush}" />
+            <TextBlock Text="A file opened in a browser may close its entire browser window, including other tabs."
+                       TextWrapping="Wrap" FontSize="11" Foreground="{StaticResource MutedBrush}" Margin="0,5,0,0" />
+        </StackPanel>
 
         <Border Grid.Row="2" Background="White" BorderBrush="{StaticResource LineBrush}"
                 BorderThickness="1" CornerRadius="8" Padding="10">
@@ -34,13 +37,14 @@
                                           IsChecked="{Binding IsChecked, UpdateSourceTrigger=PropertyChanged}"
                                           Checked="SelectionCheckBox_Changed"
                                           Unchecked="SelectionCheckBox_Changed"
+                                          ToolTip="{Binding Item.Target}"
                                           Padding="6" Margin="2" />
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
                 </ScrollViewer>
                 <TextBlock x:Name="NoApplicationsHint"
-                           Text="This workspace has no configured application entries. Website entries cannot be closed from Workspace Manager."
+                           Text="This workspace has no configured application or file entries. Website entries cannot be closed from Workspace Manager."
                            TextWrapping="Wrap" TextAlignment="Center" FontSize="12"
                            Foreground="{StaticResource MutedBrush}" VerticalAlignment="Center"
                            Margin="18" Visibility="Collapsed" IsHitTestVisible="False" />
@@ -53,7 +57,7 @@
             <Button x:Name="CloseSelectedButton" Content="Close selected" MinWidth="122"
                     Style="{StaticResource PrimaryButton}" IsDefault="True"
                     Click="CloseSelectedButton_Click"
-                    ToolTip="Request a normal close for the selected application windows." />
+                    ToolTip="Request a normal close for the selected application and file windows." />
         </StackPanel>
     </Grid>
 </Window>

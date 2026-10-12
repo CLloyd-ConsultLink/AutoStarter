@@ -1,6 +1,6 @@
 # Workspace Manager
 
-Workspace Manager is a Windows 10/11 x64 desktop app for defining reusable groups of applications and websites, then opening them across Windows virtual desktops. It supports configurable workspace profiles and a separate, ordered launch sequence.
+Workspace Manager is a Windows 10/11 x64 desktop app for defining reusable groups of applications, websites, and files, then opening them across Windows virtual desktops. It supports configurable workspace profiles and a separate, ordered launch sequence.
 
 ## Install the app
 
@@ -21,8 +21,8 @@ On first run, the app starts with no workspaces, launch items, or websites. Add 
 ### Edit workspaces
 
 - Choose **+ New** to create a workspace; edit its name and choose a virtual desktop.
-- Choose **+ Add launch item** to open one dialog, choose **Application or shortcut** or **Website**, and enter the relevant details. Use **Browse...** to select an `.exe` or `.lnk` file; process names for `.exe` files are filled in automatically when possible.
-- The launch-item table is read-only. Double-click any row to edit it in the same launch-item dialog. For launchers that start the actual application as a child process, set the process name to the child app (for example, `javaw` for a Java application); the launcher tracks the launched process tree so it can find and move the child window. If an app shows a splash or launcher window before its main window, set **Window title contains** to text unique to the main window so the launcher doesn't mistake the splash for the finished app.
+- Choose **+ Add launch item** to open one dialog and select **Application or shortcut**, **Website**, or **File**. Use **Browse...** to select an `.exe` or `.lnk` for an application, or any existing file for a file item. File items open with the default Windows app for that file type, including PDFs, Office documents, and other registered file types.
+- The launch-item table is read-only. Double-click any row to edit it in the same launch-item dialog. For applications that start their actual window in a child process, set the process name to that child app (for example, `javaw` for a Java application). For files, Workspace Manager attempts to determine the default app process from the file association and uses the file name to locate the document window. If detection is not correct, set **Process name** and **Window title contains** in the item settings.
 - Select an item and use **Move up** or **Move down** to change its launch order. Use **Remove** to delete the selected item, then choose **Save changes**.
 - Choose **Delete workspace** to remove the selected profile. The workspace list may be left empty.
 
@@ -36,7 +36,7 @@ You can also choose **Launch workspace** in the editor to run just the selected 
 
 During launch, websites open in the default browser. Applications with an existing matching visible window are skipped; background-only processes are not treated as already open. After starting an app with a detectable process name, the launcher waits up to 120 seconds for its visible window and moves it to the workspace's assigned desktop, even if you switched desktops while it was starting. It prefers windows belonging to the launched process tree and its children, but can also find a window opened by another instance of the configured process (for example, when an app reuses a background process). If the window is not detected or cannot be moved, Workspace Activity reports a warning. Applications with no resolvable process name and websites opened in the default browser cannot be moved reliably. Missing application files and invalid websites are also reported in Workspace Activity.
 
-Choose **Close workspace** to select which configured applications to close on that workspace's assigned desktop. All application entries are checked by default; uncheck any to leave it open. Website entries are not included because the app cannot safely target an individual browser tab. The app requests a normal close for matching visible windows, using the configured process name and optional window-title filter. It does not force-terminate applications or remove the virtual desktop. Apps may show their own unsaved-work prompts, and applications with no detectable process name cannot be closed by the app. Matching windows on other virtual desktops are left alone.
+Choose **Close workspace** to select which configured applications and files to close on that workspace's assigned desktop. All application and file entries are checked by default; uncheck any to leave it open. Website entries are not included because the app cannot safely target an individual browser tab. For file items, the app matches the default app process and the file name (or your optional window-title filter), then requests a normal close for matching visible document windows. If a file is open in a browser, this can close its entire containing browser window, including other tabs. The app does not force-terminate applications or remove the virtual desktop. Apps may show their own unsaved-work prompts. If Windows does not expose a usable file association, or if the document window title does not contain the file name, placement or targeted close may not be available; set the process name or window title manually when needed. Matching windows on other virtual desktops are left alone.
 
 ## Virtual desktop behavior
 

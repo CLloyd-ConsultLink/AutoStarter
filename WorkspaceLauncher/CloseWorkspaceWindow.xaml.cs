@@ -14,13 +14,17 @@ public partial class CloseWorkspaceWindow : Window
     public CloseWorkspaceWindow(string workspaceName, IEnumerable<LaunchItem> applicationItems)
     {
         InitializeComponent();
-        WorkspaceDescription.Text = $"Select applications from “{workspaceName}” to close.";
+        WorkspaceDescription.Text = $"Select applications and files from “{workspaceName}” to close.";
         _items = new ObservableCollection<CloseWorkspaceItem>(
             applicationItems
-                .Where(item => item.Kind == LaunchItemKind.Application)
+                .Where(item => item.Kind is LaunchItemKind.Application or LaunchItemKind.File)
                 .Select(item => new CloseWorkspaceItem(item)));
         ApplicationItems.ItemsSource = _items;
         NoApplicationsHint.Visibility = _items.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+        if (_items.Count == 0)
+        {
+            NoApplicationsHint.Text = "This workspace has no configured application or file entries. Website entries cannot be closed from Workspace Manager.";
+        }
         UpdateCloseButton();
     }
 

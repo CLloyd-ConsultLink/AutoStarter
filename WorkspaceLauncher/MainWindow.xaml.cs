@@ -311,8 +311,12 @@ public partial class MainWindow : Window
         AppendLog($"Updated {GetLaunchItemTypeLabel(item.Kind)}: {item.Name}");
     }
 
-    private static string GetLaunchItemTypeLabel(LaunchItemKind kind) =>
-        kind == LaunchItemKind.Website ? "website" : "application";
+    private static string GetLaunchItemTypeLabel(LaunchItemKind kind) => kind switch
+    {
+        LaunchItemKind.Website => "website",
+        LaunchItemKind.File => "file",
+        _ => "application"
+    };
 
     private void RemoveItemButton_Click(object sender, RoutedEventArgs e)
     {
@@ -397,7 +401,7 @@ public partial class MainWindow : Window
         WorkspaceProfile profile = _selectedWorkspace;
         var dialog = new CloseWorkspaceWindow(
             profile.Name,
-            profile.Items.Where(item => item.Kind == LaunchItemKind.Application))
+            profile.Items.Where(item => item.Kind is LaunchItemKind.Application or LaunchItemKind.File))
         {
             Owner = this
         };
