@@ -1,0 +1,59 @@
+<Window x:Class="WorkspaceLauncher.CloseWorkspaceWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Close workspace" Width="520" Height="520"
+        MinWidth="440" MinHeight="360" WindowStartupLocation="CenterOwner"
+        Background="{StaticResource CanvasBrush}" FontFamily="Segoe UI">
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <StackPanel Margin="0,0,0,16">
+            <TextBlock Text="Close workspace apps" FontSize="20" FontWeight="Bold"
+                       Foreground="{StaticResource InkBrush}" />
+            <TextBlock x:Name="WorkspaceDescription" FontSize="12"
+                       Foreground="{StaticResource MutedBrush}" Margin="0,4,0,0" />
+        </StackPanel>
+
+        <TextBlock Grid.Row="1" Text="Choose which configured applications to close. All are selected by default. Websites are not included."
+                   TextWrapping="Wrap" FontSize="12" Foreground="{StaticResource InkBrush}"
+                   Margin="0,0,0,10" />
+
+        <Border Grid.Row="2" Background="White" BorderBrush="{StaticResource LineBrush}"
+                BorderThickness="1" CornerRadius="8" Padding="10">
+            <Grid>
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <ItemsControl x:Name="ApplicationItems">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <CheckBox Content="{Binding Item.Name}"
+                                          IsChecked="{Binding IsChecked, UpdateSourceTrigger=PropertyChanged}"
+                                          Checked="SelectionCheckBox_Changed"
+                                          Unchecked="SelectionCheckBox_Changed"
+                                          Padding="6" Margin="2" />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+                <TextBlock x:Name="NoApplicationsHint"
+                           Text="This workspace has no configured application entries. Website entries cannot be closed from Workspace Manager."
+                           TextWrapping="Wrap" TextAlignment="Center" FontSize="12"
+                           Foreground="{StaticResource MutedBrush}" VerticalAlignment="Center"
+                           Margin="18" Visibility="Collapsed" IsHitTestVisible="False" />
+            </Grid>
+        </Border>
+
+        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
+            <Button Content="Cancel" ToolTip="Cancel without closing any applications."
+                    MinWidth="88" Margin="0,0,8,0" IsCancel="True" />
+            <Button x:Name="CloseSelectedButton" Content="Close selected" MinWidth="122"
+                    Style="{StaticResource PrimaryButton}" IsDefault="True"
+                    Click="CloseSelectedButton_Click"
+                    ToolTip="Request a normal close for the selected application windows." />
+        </StackPanel>
+    </Grid>
+</Window>

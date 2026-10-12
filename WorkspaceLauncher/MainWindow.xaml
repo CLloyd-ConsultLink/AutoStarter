@@ -165,10 +165,16 @@
                                       DropDownOpened="DesktopComboBox_DropDownOpened"
                                       SelectedIndex="{Binding DesktopIndex, UpdateSourceTrigger=PropertyChanged}" />
                         </StackPanel>
-                        <Button Grid.Column="4" Content="Launch workspace" Style="{StaticResource PrimaryButton}"
-                                ToolTip="Launch this workspace now without running the saved sequence."
-                                Padding="15,10" VerticalAlignment="Bottom"
-                                Click="LaunchSelectedButton_Click" />
+                        <StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Bottom">
+                            <Button Content="Launch workspace" Style="{StaticResource PrimaryButton}"
+                                    ToolTip="Launch this workspace now without running the saved sequence."
+                                    Padding="15,10" Margin="0,0,8,0"
+                                    Click="LaunchSelectedButton_Click" />
+                            <Button x:Name="CloseWorkspaceButton" Content="Close workspace"
+                                    Foreground="#B54450"
+                                    ToolTip="Choose configured apps to close on this workspace's assigned virtual desktop."
+                                    Padding="13,10" Click="CloseWorkspaceButton_Click" />
+                        </StackPanel>
                     </Grid>
 
                     <Grid Grid.Row="1" Margin="0,0,0,12">
@@ -255,7 +261,7 @@
                         </Grid.RowDefinitions>
                         <Grid Margin="0,0,0,8">
                             <StackPanel>
-                                <TextBlock Text="LAUNCH ACTIVITY" FontSize="10" FontWeight="Bold"
+                                <TextBlock Text="WORKSPACE ACTIVITY" FontSize="10" FontWeight="Bold"
                                            Foreground="{StaticResource MutedBrush}" />
                                 <TextBlock x:Name="StatusText" Text="Ready" FontSize="11"
                                            Foreground="{StaticResource InkBrush}" Margin="0,3,0,0" />
@@ -273,7 +279,7 @@
                             </StackPanel>
                         </Grid>
                         <TextBox x:Name="ActivityLog" Grid.Row="1" IsReadOnly="True" AcceptsReturn="True"
-                                 ToolTip="Launch results, skipped apps, and errors appear here."
+                                 ToolTip="Workspace launch and close results, skipped apps, and errors appear here."
                                  TextWrapping="Wrap" VerticalScrollBarVisibility="Auto"
                                  FontFamily="Consolas" FontSize="11" Padding="10"
                                  Background="#FAFBFD" />

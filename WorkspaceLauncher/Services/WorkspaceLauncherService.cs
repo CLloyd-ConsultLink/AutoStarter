@@ -39,6 +39,84 @@ public sealed class WorkspaceLauncherService
         }
     }
 
+    public async Task CloseProfileAsync(
+        WorkspaceProfile profile,
+        IEnumerable<LaunchItem> selectedItems,
+        Action<string> report)
+    {
+        LaunchItem[] items = selectedItems
+            .Where(item => item.Kind == LaunchItemKind.Application)
+            .ToArray();
+        if (items.Length == 0)
+        {
+            report("No application items were selected to close.");
+            return;
+        }
+
+        report($"Requesting closure of selected applications for {profile.Name} on Desktop {profile.DesktopIndex + 1}...");
+        foreach (LaunchItem item in items)
+        {
+            string processName = GetProcessName(item);
+            if (string.IsNullOrWhiteSpace(processName))
+            {
+                report($"WARNING: {item.Name} cannot be closed because its process name could not be determined.");
+                continue;
+            }
+
+            try
+            {
+                ProcessStartInfo startInfo = CreateWindowProbeStartInfo(
+                    processName,
+                    item.WindowTitle,
+                    waitForWindow: false);
+                startInfo.ArgumentList.Add("-DesktopIndex");
+                startInfo.ArgumentList.Add(profile.DesktopIndex.ToString());
+                startInfo.ArgumentList.Add("-CloseWindows");
+
+                using var process = Process.Start(startInfo)
+                    ?? throw new InvalidOperationException($"Could not request closure of {item.Name}.");
+                Task<string> outputTask = process.StandardOutput.ReadToEndAsync();
+                Task<string> errorTask = process.StandardError.ReadToEndAsync();
+                await process.WaitForExitAsync();
+                string output = (await outputTask).Trim();
+                string error = (await errorTask).Trim();
+                if (process.ExitCode != 0)
+                {
+                    report($"ERROR: Could not request closure of {item.Name}. {(string.IsNullOrWhiteSpace(error) ? $"Helper exited with code {process.ExitCode}." : error)}");
+                    continue;
+                }
+
+                string[] counts = output.Split('|');
+                if (counts.Length != 4 ||
+                    !int.TryParse(counts[0], out int matched) ||
+                    !int.TryParse(counts[1], out int requested) ||
+                    !int.TryParse(counts[2], out int failed) ||
+                    !int.TryParse(counts[3], out int lookupFailures))
+                {
+                    throw new InvalidOperationException($"The window helper returned an invalid close result for {item.Name}: {output}");
+                }
+
+                if (matched == 0 && failed == 0 && lookupFailures == 0)
+                {
+                    report($"{item.Name}: no matching visible window was found on Desktop {profile.DesktopIndex + 1}.");
+                }
+                else if (failed > 0 || lookupFailures > 0)
+                {
+                    report($"WARNING: Requested closure of {requested} {GetWindowWord(requested)} for {item.Name}; {failed} matching window(s) could not receive a close request, and {lookupFailures} window(s) could not be checked.");
+                }
+                else
+                {
+                    report($"Requested closure of {requested} {GetWindowWord(requested)} for {item.Name} on Desktop {profile.DesktopIndex + 1}.");
+                }
+            }
+            catch (Exception exception) when (
+                exception is InvalidOperationException or IOException or System.ComponentModel.Win32Exception)
+            {
+                report($"ERROR: Could not request closure of {item.Name}. {exception.Message}");
+            }
+        }
+    }
+
     private static async Task LaunchItemsAsync(
         WorkspaceProfile profile,
         Guid targetDesktopId,
@@ -289,6 +367,8 @@ public sealed class WorkspaceLauncherService
 
         return TryGetShortcutProcessName(item.Target);
     }
+
+    private static string GetWindowWord(int count) => count == 1 ? "window" : "windows";
 
     private static string TryGetShortcutProcessName(string shortcutPath)
     {

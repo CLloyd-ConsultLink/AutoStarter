@@ -18,6 +18,7 @@ public partial class MainWindow : Window
     private WorkspaceProfile? _selectedWorkspace;
     private bool _isBusy;
     private bool _launchHadItemErrors;
+    private bool _closeHadWarnings;
     private bool _updateCheckStarted;
     private int _desktopCount;
 
@@ -386,6 +387,34 @@ public partial class MainWindow : Window
         await RunLaunchOperationAsync(() => _launcher.LaunchProfileAsync(profile, ReportActivity));
     }
 
+    private async void CloseWorkspaceButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (_selectedWorkspace is null)
+        {
+            return;
+        }
+
+        WorkspaceProfile profile = _selectedWorkspace;
+        var dialog = new CloseWorkspaceWindow(
+            profile.Name,
+            profile.Items.Where(item => item.Kind == LaunchItemKind.Application))
+        {
+            Owner = this
+        };
+        if (dialog.ShowDialog() != true)
+        {
+            return;
+        }
+
+        if (!SaveProfiles(showSuccess: false))
+        {
+            return;
+        }
+
+        LaunchItem[] selectedItems = dialog.SelectedItems.ToArray();
+        await RunCloseOperationAsync(() => _launcher.CloseProfileAsync(profile, selectedItems, ReportActivity));
+    }
+
     private async void LaunchSequenceButton_Click(object sender, RoutedEventArgs e)
     {
         if (!SaveProfiles(showSuccess: false))
@@ -526,6 +555,38 @@ public partial class MainWindow : Window
         }
     }
 
+    private async Task RunCloseOperationAsync(Func<Task> close)
+    {
+        SetBusy(true);
+        ActivityLog.Clear();
+        _launchHadItemErrors = false;
+        _closeHadWarnings = false;
+        try
+        {
+            await close();
+            StatusText.Text = _launchHadItemErrors || _closeHadWarnings
+                ? "Workspace close finished with warnings or errors."
+                : "Workspace close finished.";
+            AppendLog(_launchHadItemErrors || _closeHadWarnings
+                ? "Workspace close finished with warnings or errors. Review Workspace Activity."
+                : "Workspace close finished.");
+        }
+        catch (Exception exception)
+        {
+            StatusText.Text = "Workspace close stopped because of an error.";
+            AppendLog($"ERROR: {exception.Message}");
+            MessageBox.Show(
+                $"The workspace could not be closed.\n\n{exception.Message}",
+                "Workspace close failed",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
+        }
+        finally
+        {
+            SetBusy(false);
+        }
+    }
+
     private void SetBusy(bool isBusy)
     {
         _isBusy = isBusy;
@@ -543,6 +604,10 @@ public partial class MainWindow : Window
         if (message.StartsWith("ERROR:", StringComparison.Ordinal))
         {
             _launchHadItemErrors = true;
+        }
+        if (message.StartsWith("WARNING:", StringComparison.Ordinal))
+        {
+            _closeHadWarnings = true;
         }
 
         StatusText.Text = message;
